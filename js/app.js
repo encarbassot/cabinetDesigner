@@ -10,13 +10,11 @@ function enterRoomMode() {
   document.getElementById('action-row').style.display      = 'none';
   document.getElementById('editor-back-btn').style.display = 'none';
 
-  document.getElementById('mode-btn-cabinet').classList.remove('active');
-  document.getElementById('mode-btn-room').classList.add('active');
   document.querySelectorAll('.hdr-view-btn').forEach(b => b.classList.remove('active'));
 
   if (!currentRoom) currentRoom = loadSavedRoom() || createRoom(400, 300, 250);
   refreshSidePanel();
-  setRoomViewMode(roomViewMode || 'split');
+  setRoomViewMode(roomViewMode || '3d');
 }
 
 function enterCabinetMode() {
@@ -27,9 +25,6 @@ function enterCabinetMode() {
   document.getElementById('action-row').style.display      = '';
   document.getElementById('editor-back-btn').style.display = 'none';
 
-  document.getElementById('mode-btn-cabinet').classList.add('active');
-  document.getElementById('mode-btn-room').classList.remove('active');
-
   clearRoomScene();
   document.getElementById('room-canvas-wrap').style.display = 'none';
   document.getElementById('canvas-area').style.display = '';
@@ -38,6 +33,7 @@ function enterCabinetMode() {
 }
 
 function setRoomViewMode(mode) {
+  if (mode === 'split') mode = '3d'; // split replaced by panel minimap
   roomViewMode = mode;
   try { localStorage.setItem('plykit_roomview', mode); } catch {}
   const area2d  = document.getElementById('room-canvas-wrap');
@@ -45,38 +41,32 @@ function setRoomViewMode(mode) {
   const plan    = document.getElementById('view-2d');
 
   plan.style.display = 'none';
-  document.getElementById('rv-btn-2d').classList.toggle('active',    mode === '2d');
-  document.getElementById('rv-btn-3d').classList.toggle('active',    mode === '3d');
-  document.getElementById('rv-btn-split').classList.toggle('active', mode === 'split');
+  document.getElementById('rv-btn-2d').classList.toggle('active', mode === '2d');
+  document.getElementById('rv-btn-3d').classList.toggle('active', mode === '3d');
 
   if (mode === '2d') {
-    // Full-screen 2D plan — room-canvas-wrap fills canvas-area
+    // Move canvas back to canvas-area if it's in the panel
+    if (area2d.parentElement !== area3d) {
+      area3d.appendChild(area2d);
+      area2d.classList.remove('sp-minimap-in-panel');
+    }
     area3d.style.display = '';
     area3d.style.flex    = '1';
-    area2d.style.display = '';
-    area2d.style.cssText += '; position:absolute; inset:0; width:100%; height:100%; top:0; right:0; border-radius:0; box-shadow:none;';
+    area2d.style.cssText = 'position:absolute; inset:0; width:100%; height:100%; border-radius:0; box-shadow:none;';
     resizeRoom2d();
     fitRoomToView();
   } else if (mode === '3d') {
     area3d.style.display = '';
     area3d.style.flex    = '1';
-    area2d.style.display = 'none';
     buildRoomScene();
     onResize();
-  } else { // split — 3D full + minimap overlay
-    area3d.style.display = '';
-    area3d.style.flex    = '1';
-    area2d.style.cssText = ''; // reset any inline overrides from 2d mode
-    area2d.style.display = '';
-    buildRoomScene();
-    onResize();
-    resizeRoom2d();
-    fitRoomToView();
+    if (typeof _syncMinimapLocation === 'function') _syncMinimapLocation(false);
+    else area2d.style.display = 'none';
   }
 }
 
-function enterCabinetEditorForPlacement(pl) {
-  const proj = _getProjects().find(p => p.id === pl.furnitureId);
+function enterCabinetEditorForProject(id) {
+  const proj = _getProjects().find(p => p.id === id);
   if (!proj) return;
 
   appMode = 'cabinet';
@@ -86,12 +76,8 @@ function enterCabinetEditorForPlacement(pl) {
   document.getElementById('editor-back-btn').style.display = '';
   document.getElementById('room-canvas-wrap').style.display = 'none';
 
-  document.getElementById('mode-btn-cabinet').classList.remove('active');
-  document.getElementById('mode-btn-room').classList.remove('active');
-
   clearRoomScene();
 
-  // Load project without triggering the cfg modal
   if (currentProjectId) saveState();
   currentProjectId   = proj.id;
   currentProjectName = proj.name;
@@ -103,10 +89,40 @@ function enterCabinetEditorForPlacement(pl) {
   setView('3d');
 }
 
+function enterCabinetEditorForPlacement(pl) {
+  enterCabinetEditorForProject(pl.furnitureId);
+}
+
+function newCabinetFromRoom() {
+  if (currentProjectId) saveState();
+  Object.assign(furniture, { height: 200, depth: 32, thickness: 1.8 });
+  furniture.columnWidths = [40, 50, 40];
+  furniture.columnSlabs  = [[60, 60], [80], [40, 80]];
+  pinnedTotal = false;
+  pinnedCols.clear();
+  slabLinks   = [];
+  woodPresetIdx = 1;
+  document.querySelectorAll('.wood-swatch').forEach((sw, j) => sw.classList.toggle('active', j === 1));
+  currentProjectId   = null;
+  currentProjectName = null;
+  try { localStorage.removeItem(CURRENT_ID_KEY); } catch {}
+
+  appMode = 'cabinet';
+  document.getElementById('room-side-panel').style.display = 'none';
+  document.getElementById('room-toolbar').style.display    = 'none';
+  document.getElementById('action-row').style.display      = '';
+  document.getElementById('editor-back-btn').style.display = '';
+  document.getElementById('room-canvas-wrap').style.display = 'none';
+  clearRoomScene();
+
+  _updateHeaderTitle();
+  openCfgModal(false);
+  setView('3d');
+}
+
 function backToRoom() {
   saveState();
   enterRoomMode();
-  if (roomViewMode !== '2d') buildRoomScene();
 }
 
 // ─── Room config modal ─────────────────────────────────────────────────────────
@@ -182,13 +198,5 @@ if (_savedRoomView) roomViewMode = _savedRoomView;
 
 initRoom2d();
 
-if (_getProjects().length === 0) {
-  openCfgModal(false);
-} else {
-  buildFurniture();
-  if (_savedMode === 'room') {
-    enterRoomMode();
-  } else if (_savedView) {
-    setView(_savedView);
-  }
-}
+buildFurniture();
+enterRoomMode();

@@ -41,7 +41,7 @@ function resizeRoom2d() {
 
 function fitRoomToView() {
   if (!currentRoom || !room2dCanvas) return;
-  const minimap = roomViewMode === 'split';
+  const minimap = room2dCanvas.width < 400;
   const pad = minimap ? 20 : 70;
   const sx  = (room2dCanvas.width  - 2 * pad) / currentRoom.width;
   const sy  = (room2dCanvas.height - 2 * pad) / currentRoom.depth;

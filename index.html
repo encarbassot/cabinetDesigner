@@ -15,12 +15,6 @@
 <header>
   <span class="logo">PlyKit <span class="title">3D</span></span>
 
-  <!-- Mode toggle -->
-  <div class="mode-toggle">
-    <button class="mode-btn active" id="mode-btn-cabinet" onclick="enterCabinetMode()">Mueble</button>
-    <button class="mode-btn"        id="mode-btn-room"    onclick="enterRoomMode()">Sala</button>
-  </div>
-
   <!-- Back to room (shown when editing a cabinet from room) -->
   <button class="back-room-btn" id="editor-back-btn" onclick="backToRoom()" style="display:none">← Sala</button>
 
@@ -90,9 +84,8 @@
   <!-- Room view toolbar (shown in sala mode) -->
   <div id="room-toolbar" style="display:none">
     <div class="rv-toggle">
-      <button class="rv-btn active" id="rv-btn-2d"    onclick="setRoomViewMode('2d')">2D</button>
-      <button class="rv-btn"        id="rv-btn-3d"    onclick="setRoomViewMode('3d')">3D</button>
-      <button class="rv-btn"        id="rv-btn-split" onclick="setRoomViewMode('split')">2D + 3D</button>
+      <button class="rv-btn active" id="rv-btn-2d" onclick="setRoomViewMode('2d')">2D</button>
+      <button class="rv-btn"        id="rv-btn-3d" onclick="setRoomViewMode('3d')">3D</button>
     </div>
     <button class="rv-cfg-btn" onclick="openRoomCfgModal()">
       <svg viewBox="0 0 18 18" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="9" r="3"/><path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.22 3.22l1.42 1.42M13.36 13.36l1.42 1.42M3.22 14.78l1.42-1.42M13.36 4.64l1.42-1.42"/></svg>
@@ -110,6 +103,16 @@
       <button class="sp-collapse-btn" onclick="toggleSidePanel()" title="Colapsar panel">‹</button>
     </div>
     <div id="sp-cabinet-list"></div>
+    <div id="sp-minimap-section">
+      <div class="sp-minimap-hdr">
+        <span class="sp-minimap-label">Plano</span>
+        <button class="sp-minimap-toggle" onclick="toggleMinimapPanel()" title="Mostrar/ocultar plano">▾</button>
+      </div>
+      <div id="sp-minimap-slot"></div>
+    </div>
+    <div id="sp-new-btn-wrap">
+      <button id="sp-new-btn" onclick="newCabinetFromRoom()">+ Nuevo mueble</button>
+    </div>
   </div>
 
   <!-- Main editor area -->
