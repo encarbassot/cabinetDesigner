@@ -2,1636 +2,284 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>PlyKit — Editor Visual 3D</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #f2ede8;
-      color: #1c1a18;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── Header ────────────────────────────────────────── */
-    header {
-      background: #fff;
-      border-bottom: 1px solid #e4ddd6;
-      padding: 0 28px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-shrink: 0;
-    }
-    header .logo  { font-size: 18px; font-weight: 700; color: #b84020; letter-spacing: -0.4px; }
-    header .slash { color: #c8c0b8; font-weight: 300; }
-    header .title { font-size: 14px; color: #6b6460; }
-    header .spacer { flex: 1; }
-    header .badge {
-      font-size: 11px; background: #f5f0eb; color: #9b8f86;
-      border: 1px solid #e4ddd6; padding: 3px 10px; border-radius: 20px;
-    }
-    /* ── Header file dropdown ───────────────────────────── */
-    .hdr-dropdown { position: relative; }
-    .hdr-btn {
-      font-size: 12px; font-weight: 500; color: #3a3330;
-      background: #f5f0eb; border: 1px solid #ddd6ce;
-      padding: 5px 12px; border-radius: 6px; cursor: pointer;
-      transition: background 0.15s;
-    }
-    .hdr-btn:hover { background: #ede8e2; }
-    .hdr-menu {
-      display: none; position: absolute; top: calc(100% + 4px); left: 0;
-      background: #fff; border: 1px solid #e4ddd6; border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 150px;
-      overflow: hidden; z-index: 9000;
-    }
-    .hdr-menu.open { display: block; }
-    .hdr-menu button {
-      display: block; width: 100%; text-align: left;
-      font-size: 13px; padding: 9px 14px; background: none;
-      border: none; cursor: pointer; color: #2e2b28;
-    }
-    .hdr-menu button:hover { background: #f5f0eb; }
-    .hdr-menu .menu-sep { height: 1px; background: #e8e2db; margin: 3px 0; }
-    /* ── Header depth field ─────────────────────────────── */
-    .hdr-depth {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 12px; color: #6b6460; border-left: 1px solid #e4ddd6; padding-left: 14px;
-    }
-    .hdr-depth label { font-weight: 500; white-space: nowrap; }
-    .hdr-depth input {
-      width: 52px; padding: 4px 6px; border: 1px solid #ddd6ce; border-radius: 5px;
-      font-size: 12px; text-align: right; background: #faf7f4;
-    }
-    .hdr-depth span { color: #9b8f86; }
-
-    /* ── Layout ─────────────────────────────────────────── */
-    #app {
-      display: flex; flex: 1; overflow: hidden;
-      height: calc(100vh - 56px - 108px);
-    }
-
-    /* ── Sidebar ────────────────────────────────────────── */
-    #sidebar {
-      width: 230px; flex-shrink: 0; background: #fff;
-      border-right: 1px solid #e4ddd6;
-      padding: 16px 12px; display: flex; flex-direction: column;
-      gap: 10px; overflow-y: auto;
-    }
-    .s-section {
-      background: #faf7f4; border: 1px solid #e8e2db;
-      border-radius: 8px; padding: 11px 12px 13px;
-    }
-    .s-section h3 {
-      font-size: 9px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 1.3px; color: #b0a49a; margin-bottom: 10px;
-    }
-    .input-row {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
-    }
-    .input-row label { font-size: 12px; color: #7a706a; width: 72px; flex-shrink: 0; }
-    input[type="number"] {
-      flex: 1; background: #fff; border: 1px solid #ddd8d2; color: #1c1a18;
-      padding: 5px 8px; border-radius: 5px; font-size: 13px; outline: none;
-      transition: border-color 0.15s;
-    }
-    input[type="number"]:focus { border-color: #b84020; }
-
-    /* Buttons */
-    .btn {
-      display: block; width: 100%; padding: 7px 10px; border: none;
-      border-radius: 5px; font-size: 12px; font-weight: 500; cursor: pointer;
-      transition: background 0.14s, transform 0.08s; text-align: center; margin-top: 6px;
-    }
-    .btn:active { transform: scale(0.97); }
-    .btn-primary { background: #b84020; color: #fff; }
-    .btn-primary:hover { background: #9e3418; }
-    .btn-ghost { background: #fff; color: #5a5250; border: 1px solid #ddd8d2; }
-    .btn-ghost:hover { background: #f5f0eb; }
-    .btn-danger { background: #fdf0ec; color: #b84020; border: 1px solid #f0d4c8; }
-    .btn-danger:hover { background: #f9e0d8; }
-    .btn-xs { padding: 3px 7px; font-size: 11px; margin-top: 0; border-radius: 4px; width: auto; }
-
-    /* Column / slab list rows */
-    .col-row, .slab-row {
-      display: flex; align-items: center; gap: 5px;
-      margin-bottom: 5px; cursor: pointer;
-      padding: 3px 4px; border-radius: 4px; transition: background 0.1s;
-    }
-    .col-row:hover  { background: #f0ebe4; }
-    .col-row.active { background: #fdf0ec; }
-    .row-badge {
-      font-size: 9px; background: #e8e2db; color: #9b8f86;
-      padding: 2px 5px; border-radius: 3px; flex-shrink: 0;
-      font-weight: 600; min-width: 22px; text-align: center;
-    }
-    .in-sm {
-      width: 52px !important; flex: none !important;
-      padding: 4px 6px !important; font-size: 12px !important;
-    }
-    .unit-lbl { font-size: 10px; color: #9b8f86; flex-shrink: 0; }
-
-    /* Pin buttons */
-    .pin-btn {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 1.5px solid #d8d2cc; background: transparent;
-      color: #c0b8b0; font-size: 10px; line-height: 1;
-      cursor: pointer; display: inline-flex; align-items: center;
-      justify-content: center; padding: 0; flex-shrink: 0;
-      transition: border-color 0.12s, background 0.12s, color 0.12s;
-    }
-    .pin-btn:hover { border-color: #b84020; color: #b84020; }
-    .pin-btn.pinned { background: #b84020; border-color: #b84020; color: #fff; }
-    .pin-total-wrap { display: flex; align-items: center; margin-bottom: 10px; }
-    .pin-total-wrap h3 { margin-bottom: 0; flex: 1; }
-    .pin-total-btn {
-      font-size: 9px; padding: 2px 7px; border-radius: 3px;
-      border: 1px solid #d8d2cc; background: transparent;
-      color: #b0a49a; cursor: pointer; font-weight: 600; letter-spacing: 0.5px;
-      transition: all 0.12s;
-    }
-    .pin-total-btn:hover { border-color: #b84020; color: #b84020; }
-    .pin-total-btn.pinned { background: #fdf0ec; border-color: #b84020; color: #b84020; }
-
-    /* Selection info */
-    #sel-info { font-size: 12px; line-height: 1.9; color: #b0a49a; }
-    #sel-info b { color: #b84020; }
-
-    /* ── Canvas ─────────────────────────────────────────── */
-    #canvas-area {
-      flex: 1; position: relative; overflow: hidden;
-      background: #e8e4de; cursor: grab;
-    }
-    #canvas-area:active { cursor: grabbing; }
-    #canvas-area canvas { display: block; }
-    #hint {
-      position: absolute; bottom: 12px; right: 14px;
-      font-size: 10px; color: #c0b8b0; pointer-events: none;
-      line-height: 1.9; text-align: right;
-    }
-
-    /* ── Bottom panel ───────────────────────────────────── */
-    #bottom {
-      height: 108px; flex-shrink: 0; background: #fff;
-      border-top: 1px solid #e4ddd6;
-      display: flex; align-items: center; gap: 12px;
-      padding: 0 18px; overflow-x: auto;
-    }
-    .stat-card {
-      background: #faf7f4; border: 1px solid #e8e2db; border-radius: 7px;
-      padding: 10px 16px; min-width: 100px; flex-shrink: 0;
-    }
-    .stat-card .lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #b0a49a; }
-    .stat-card .val { font-size: 22px; font-weight: 700; color: #b84020; line-height: 1.15; }
-    .stat-card .sub { font-size: 10px; color: #c0b8b0; }
-    #bottom-div { width: 1px; height: 66px; background: #e4ddd6; flex-shrink: 0; }
-    #col-pills-wrap { flex: 1; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
-    .col-pills { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-    .bay-pill {
-      font-size: 11px; background: #faf7f4; border: 1px solid #e4ddd6;
-      border-radius: 4px; padding: 4px 10px; color: #6b6460; cursor: pointer;
-      transition: background 0.1s; white-space: nowrap;
-    }
-    .bay-pill:hover  { background: #f0ebe4; }
-    .bay-pill.active { background: #fdf0ec; border-color: #b84020; color: #b84020; }
-
-    /* ── Wood color picker ──────────────────────────────── */
-    #wood-picker {
-      position: absolute; top: 12px; left: 12px;
-      z-index: 10; pointer-events: auto;
-      display: flex; flex-direction: column; gap: 5px;
-    }
-    #wood-picker-label {
-      font-size: 9px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 1.2px; color: #c0b8b0;
-      background: rgba(255,255,255,0.78); backdrop-filter: blur(6px);
-      padding: 3px 8px; border-radius: 4px;
-      border: 1px solid rgba(200,190,180,0.4);
-    }
-    #wood-swatches {
-      display: flex; flex-direction: column; gap: 4px;
-    }
-    .wood-swatch {
-      width: 28px; height: 28px; border-radius: 6px;
-      border: 2px solid transparent;
-      cursor: pointer;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
-      transition: border-color 0.12s, transform 0.1s;
-    }
-    .wood-swatch:hover  { transform: scale(1.12); }
-    .wood-swatch.active { border-color: #fff; box-shadow: 0 0 0 1px #b84020, 0 1px 4px rgba(0,0,0,0.22); }
-
-    /* ── Canvas overlay buttons ─────────────────────────── */
-    #canvas-overlay {
-      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
-    }
-    .ov-btn {
-      position: absolute;
-      pointer-events: auto;
-      transform: translate(-50%, -50%);
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      border: 1.5px solid #d8d0c8;
-      background: rgba(255,255,255,0.92);
-      backdrop-filter: blur(4px);
-      color: #6b6460;
-      font-size: 17px; font-weight: 300; line-height: 1;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 1px 5px rgba(0,0,0,0.13);
-      transition: background 0.1s, border-color 0.1s, color 0.1s;
-      user-select: none;
-    }
-    .ov-btn:hover  { background: #fff; }
-    .ov-add        { color: #b84020; border-color: #f0cfc4; font-size: 20px; }
-    .ov-add:hover  { background: #fdf0ec; border-color: #b84020; }
-    .ov-rem:hover  { background: #fdf0ec; color: #b84020; border-color: #f0cfc4; }
-    .ov-add-slab   { width: 20px; height: 20px; font-size: 15px; opacity: 0.82; }
-    .ov-add-slab:hover { opacity: 1; }
-
-    /* ── Compartment cover label ────────────────────────────── */
-    #compartment-label {
-      position: absolute;
-      pointer-events: none;
-      transform: translate(-50%, -50%);
-      background: rgba(255, 250, 245, 0.96);
-      backdrop-filter: blur(6px);
-      border: 1px solid rgba(184, 64, 32, 0.28);
-      border-radius: 7px;
-      padding: 7px 14px;
-      display: none;
-      z-index: 20;
-      text-align: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
-      white-space: nowrap;
-      line-height: 1.3;
-    }
-    #compartment-label .cv { font-size: 16px; font-weight: 700; color: #b84020; }
-    #compartment-label .cu { font-size: 10px; color: #9b8f86; letter-spacing: 0.5px; }
-
-    /* ── View mode toggle ───────────────────────────────────── */
-    #view-toggle {
-      position: absolute; top: 12px; right: 12px;
-      z-index: 10; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
-    }
-    #view-toggle .vt-label {
-      font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px;
-      color: #c0b8b0; background: rgba(255,255,255,0.78); backdrop-filter: blur(6px);
-      padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(200,190,180,0.4);
-    }
-    #view-toggle .vt-btns { display: flex; gap: 3px; }
-    .vt-btn {
-      font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
-      background: rgba(255,255,255,0.78); backdrop-filter: blur(6px);
-      padding: 4px 9px; border-radius: 4px; border: 1px solid rgba(200,190,180,0.4);
-      cursor: pointer; color: #9b8f86; transition: all 0.13s;
-    }
-    .vt-btn:hover { border-color: #b84020; color: #b84020; }
-    .vt-btn.active { background: rgba(253,240,236,0.92); border-color: #b84020; color: #b84020; }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <header>
-  <span class="logo">PlyKit</span>
-  <span class="slash">/</span>
-  <span class="title">Editor Visual 3D</span>
+  <span class="logo">PlyKit <span class="title">3D</span></span>
+
+  <!-- Mode toggle -->
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="mode-btn-cabinet" onclick="enterCabinetMode()">Mueble</button>
+    <button class="mode-btn"        id="mode-btn-room"    onclick="enterRoomMode()">Sala</button>
+  </div>
+
+  <!-- Back to room (shown when editing a cabinet from room) -->
+  <button class="back-room-btn" id="editor-back-btn" onclick="backToRoom()" style="display:none">← Sala</button>
+
   <div class="hdr-dropdown" id="file-dropdown">
-    <button class="hdr-btn" onclick="toggleFileMenu(event)">File ▾</button>
-    <div class="hdr-menu" id="file-menu">
-      <button onclick="downloadProject()">↓ &nbsp;Download</button>
-      <div class="menu-sep"></div>
-      <button onclick="document.getElementById('upload-input').click()">↑ &nbsp;Upload</button>
-      <input type="file" id="upload-input" accept=".json" style="display:none" onchange="uploadProject(this)">
+    <button class="hdr-btn" id="file-btn" onclick="toggleFileMenu(event)">
+      <span id="hdr-project-name" style="color:#a09488">Sin guardar</span> ▾
+    </button>
+    <div class="hdr-menu" id="file-menu"></div>
+  </div>
+  <span id="save-indicator" class="save-badge">✓ Guardado</span>
+  <span class="spacer"></span>
+  <div id="action-row">
+
+    <!-- TOOLS -->
+
+    <div id="wood-picker">
+      <button id="wood-toggle" class="action-btn" title="Color madera" onclick="toggleWoodPicker(event)" data-canvas-tip="Pick wood color"></button>
+      <div id="wood-swatches"></div>
+    </div>
+
+    <div class="tool-ctx" id="ctx-shelf">
+      <button class="action-btn" id="btn-shelf" onclick="toggleShelfTool()" title="Añadir balda" data-canvas-tip="Click to add one<br>Drag to add multiple">
+        <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="3" x2="3" y2="15"/>
+          <line x1="15" y1="3" x2="15" y2="15"/>
+          <line x1="3" y1="9" x2="15" y2="9"/>
+        </svg>
+      </button>
+      <div class="tool-subtoolbar" id="shelf-subtoolbar">
+        <button class="subtool-btn active" id="btn-snap-fractions" onclick="toggleSnapFractions()" title="Snap to ½ ⅓ ¼ ⅕ ⅙ positions">½</button>
+      </div>
+    </div>
+    <button class="action-btn" id="btn-bulldozer" onclick="toggleBulldozer()" title="Borrar balda" data-canvas-tip="Click on a shelf to remove it">
+      <img src="icons/bulldozer.svg" width="15" height="15" alt="Bulldozer">
+    </button>
+
+    <span class="separator"></span>
+
+    <!-- PARAMETERS -->
+
+    <button class="action-btn" id="btn-cfg" onclick="openCfgModal(true)" title="Configuración de dimensiones" data-canvas-tip="Configure furniture dimensions">
+      <img src="icons/pencil.svg" width="15" height="15" alt="Configuración">
+    </button>
+    <button class="action-btn" id="btn-cols" onclick="openColsModal()" title="Gestión de columnas" data-canvas-tip="Add, remove or resize columns">
+      <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="4" height="14" rx="1"/>
+        <rect x="7" y="2" width="4" height="14" rx="1"/>
+        <rect x="12" y="2" width="4" height="14" rx="1"/>
+      </svg>
+    </button>
+
+    <span class="separator"></span>
+
+    <!-- CAM -->
+
+    <button class="action-btn muted" id="btn-cam-reset" onclick="resetCamera()" title="Resetear vista" data-canvas-tip="Reset camera to default view">
+      <img src="icons/telescope.svg" width="15" height="15" alt="Reset">
+    </button>
+
+    <div class="hdr-view-toggle">
+      <button class="hdr-view-btn"        id="hdr-btn-2d"     onclick="setView('2d')" data-canvas-tip="2D plan view">2D</button>
+      <button class="hdr-view-btn active" id="hdr-btn-3d"     onclick="setView('3d')" data-canvas-tip="3D perspective view">3D</button>
+      <button class="hdr-view-btn"        id="hdr-btn-pretty" onclick="setView('pretty')" data-canvas-tip="Rendered preview"><img src="icons/glass-ball.svg" width="13" height="13" alt="Vista" style="vertical-align:middle;margin-right:3px"></button>
     </div>
   </div>
-  <div class="hdr-depth">
-    <label for="in-depth">Depth</label>
-    <input type="number" id="in-depth" value="32" min="5" max="100" onchange="applyDimensions()">
-    <span>cm</span>
+
+  <!-- Room view toolbar (shown in sala mode) -->
+  <div id="room-toolbar" style="display:none">
+    <div class="rv-toggle">
+      <button class="rv-btn active" id="rv-btn-2d"    onclick="setRoomViewMode('2d')">2D</button>
+      <button class="rv-btn"        id="rv-btn-3d"    onclick="setRoomViewMode('3d')">3D</button>
+      <button class="rv-btn"        id="rv-btn-split" onclick="setRoomViewMode('split')">2D + 3D</button>
+    </div>
+    <button class="rv-cfg-btn" onclick="openRoomCfgModal()">
+      <svg viewBox="0 0 18 18" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="9" r="3"/><path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.22 3.22l1.42 1.42M13.36 13.36l1.42 1.42M3.22 14.78l1.42-1.42M13.36 4.64l1.42-1.42"/></svg>
+      Sala
+    </button>
   </div>
-  <span class="spacer"></span>
-  <span class="badge">Demo · Three.js</span>
 </header>
 
 <div id="app">
 
-  <div id="sidebar">
-
-    <div class="s-section">
-      <h3>Unidad</h3>
-      <div class="input-row">
-        <label>Alto (cm)</label>
-        <input type="number" id="in-height" value="200" min="30" max="400">
-      </div>
-      <div class="input-row">
-        <label>Grosor (cm)</label>
-        <input type="number" id="in-thick" value="1.8" min="0.3" max="10" step="0.1">
-      </div>
-      <button class="btn btn-primary" onclick="applyDimensions()">Aplicar</button>
+  <!-- Room designer side panel -->
+  <div id="room-side-panel" style="display:none">
+    <div class="sp-header">
+      <span class="sp-header-label">Mis Diseños</span>
+      <button class="sp-collapse-btn" onclick="toggleSidePanel()" title="Colapsar panel">‹</button>
     </div>
+    <div id="sp-cabinet-list"></div>
+  </div>
 
-    <div class="s-section">
-      <div class="pin-total-wrap">
-        <h3>Columnas <span id="col-count" style="font-weight:400;text-transform:none;letter-spacing:0">(3)</span></h3>
+  <!-- Main editor area -->
+  <div id="editor-wrap">
+
+    <!-- Canvas views (cabinet + room canvases) -->
+    <div id="canvas-views">
+
+      <div id="canvas-area">
+        <div id="canvas-tooltip"></div>
+        <div id="canvas-overlay"></div>
+        <div id="compartment-label"></div>
+        <div id="canvas-actions">
+          <div id="hint">
+            <span class="hint-mouse">Arrastrar → rotar &nbsp;·&nbsp; Rueda → zoom<br>Btn derecho → pan &nbsp;·&nbsp; Click → seleccionar</span>
+            <span class="hint-touch">1 dedo → rotar &nbsp;·&nbsp; 2 dedos → mover<br>Pellizco → zoom &nbsp;·&nbsp; Tap → seleccionar</span>
+          </div>
+        </div>
+
+        <!-- Room 2D minimap overlay (shown in split mode) -->
+        <div id="room-canvas-wrap" style="display:none">
+          <canvas id="room-canvas"></canvas>
+        </div>
+      </div>
+
+      <div id="view-2d">
+        <canvas id="plan-canvas"></canvas>
+        <input id="plan2d-label-input" type="number" min="1">
+      </div>
+
+    </div><!-- /canvas-views -->
+  </div><!-- /editor-wrap -->
+
+</div><!-- /app -->
+
+<!-- Cabinet dimensions modal -->
+<div id="cfg-modal-backdrop" class="cfg-backdrop">
+  <div class="cfg-modal">
+    <div class="cfg-modal-header">
+      <div>
+        <h2>Dimensiones del mueble</h2>
+        <p>Configura las medidas antes de continuar</p>
+      </div>
+    </div>
+    <div class="cfg-field">
+      <label>Alto (cm)</label>
+      <div class="cfg-input-group">
+        <input type="number" id="cfg-height" value="200" min="30" max="400">
+        <button class="cfg-lock-btn" id="cfg-lock-height" onclick="toggleCfgLock('height')" title="Bloquear">
+          <svg viewBox="0 0 14 16" width="13" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="10" height="8" rx="1.5"/>
+            <path d="M4.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="cfg-field">
+      <label>Ancho útil (cm)</label>
+      <div class="cfg-input-group">
+        <input type="number" id="cfg-width" value="130" min="20" max="1000">
+        <button class="cfg-lock-btn" id="cfg-lock-width" onclick="toggleCfgLock('width')" title="Bloquear">
+          <svg viewBox="0 0 14 16" width="13" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="10" height="8" rx="1.5"/>
+            <path d="M4.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="cfg-field">
+      <label>Fondo (cm)</label>
+      <div class="cfg-input-group">
+        <input type="number" id="cfg-depth" value="32" min="5" max="100">
+        <button class="cfg-lock-btn" id="cfg-lock-depth" onclick="toggleCfgLock('depth')" title="Bloquear">
+          <svg viewBox="0 0 14 16" width="13" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="10" height="8" rx="1.5"/>
+            <path d="M4.5 7V4.5a2.5 2.5 0 0 1 5 0V7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="cfg-field">
+      <label>Grosor (cm)</label>
+      <input type="number" id="cfg-thick" value="1.8" min="0.3" max="10" step="0.1">
+    </div>
+    <div class="cfg-modal-footer">
+      <button class="cfg-btn-cancel" id="cfg-cancel-btn" onclick="closeCfgModal()" style="display:none">Cancelar</button>
+      <button class="btn btn-primary" onclick="applyCfgModal()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Columns modal -->
+<div id="cols-modal-backdrop" class="cfg-backdrop">
+  <div class="cfg-modal cfg-modal--cols">
+    <div class="cfg-modal-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>Columnas <span id="col-count" style="font-size:12px;font-weight:400;color:#b0a49a">(3)</span></h2>
         <button class="pin-total-btn" id="pin-total-btn" onclick="togglePinTotal()" title="Fijar anchura total">⊙ Σ</button>
       </div>
-      <div class="input-row">
-        <label>Ancho útil (cm)</label>
-        <input type="number" id="in-global-width" min="20" max="1000" step="1"
-          onchange="applyGlobalWidth(+this.value)">
-      </div>
-      <div id="columns-list"></div>
-      <button class="btn btn-ghost" style="margin-top:8px" onclick="addColumnUI()">+ Columna</button>
+      <button class="cfg-modal-close" onclick="closeColsModal()">✕ Cerrar</button>
     </div>
-
-    <div class="s-section">
-      <h3>Baldas · <span id="sel-bay-label" style="font-weight:400;text-transform:none;letter-spacing:0;color:#b0a49a">sin selección</span></h3>
-      <div id="slabs-list"><span style="color:#c8c0b8;font-size:11px">Selecciona una columna</span></div>
-    </div>
-
-    <div class="s-section">
-      <h3>Cámara</h3>
-      <button class="btn btn-ghost" onclick="resetCamera()">↺ Resetear vista</button>
-      <button class="btn btn-ghost" id="btn-backdrop" onclick="toggleBackdrop()" style="margin-top:5px">⊙ Fondo</button>
-    </div>
-
-    <div class="s-section">
-      <h3>Selección</h3>
-      <div id="sel-info"><span style="color:#c8c0b8">Ningún elemento</span></div>
-    </div>
-
-  </div>
-
-  <div id="canvas-area">
-    <div id="canvas-overlay"></div>
-    <div id="compartment-label"></div>
-    <div id="wood-picker">
-      <div id="wood-picker-label">Madera</div>
-      <div id="wood-swatches"></div>
-    </div>
-    <div id="view-toggle">
-      <div class="vt-label">Vista</div>
-      <div class="vt-btns">
-        <button class="vt-btn active" id="vt-tech"   onclick="setViewMode('tech')">✎ Técnico</button>
-        <button class="vt-btn"        id="vt-pretty" onclick="setViewMode('pretty')">✦ Vista</button>
-      </div>
-    </div>
-    <div id="hint">
-      Arrastrar → rotar &nbsp;·&nbsp; Rueda → zoom<br>
-      Btn derecho → pan &nbsp;·&nbsp; Click → seleccionar
-    </div>
-  </div>
-
-</div>
-
-<div id="bottom">
-  <div class="stat-card">
-    <div class="lbl">Anchura total</div>
-    <div class="val" id="stat-tw">—</div>
-    <div class="sub">calculada</div>
-  </div>
-  <div class="stat-card">
-    <div class="lbl">Alto</div>
-    <div class="val" id="stat-h">200 cm</div>
-    <div class="sub">fijo</div>
-  </div>
-  <div class="stat-card">
-    <div class="lbl">Bahías</div>
-    <div class="val" id="stat-bays">3</div>
-    <div class="sub">columnas</div>
-  </div>
-  <div class="stat-card">
-    <div class="lbl">Paredes</div>
-    <div class="val" id="stat-walls">4</div>
-    <div class="sub">verticales</div>
-  </div>
-  <div id="bottom-div"></div>
-  <div id="col-pills-wrap">
-    <div class="col-pills" id="col-pills"></div>
+    <div id="columns-list" style="display:flex;flex-direction:column;gap:4px"></div>
+    <button class="btn btn-ghost" style="margin-top:10px" onclick="addColumnUI()">+ Columna</button>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
-<script src="sketch.js"></script>
+<!-- Room config modal -->
+<div id="room-cfg-backdrop" class="cfg-backdrop" style="display:none">
+  <div class="cfg-modal">
+    <div class="cfg-modal-header">
+      <div>
+        <h2>Configurar sala</h2>
+        <p>Dimensiones del espacio en cm</p>
+      </div>
+    </div>
+    <div class="cfg-field">
+      <label>Nombre</label>
+      <input type="text" id="rcfg-name" value="Mi habitación" style="width:100%;background:#faf7f4;border:1px solid #ddd8d2;color:#1c1a18;padding:8px 10px;border-radius:7px;font-size:14px;outline:none;box-sizing:border-box;">
+    </div>
+    <div class="cfg-field">
+      <label>Anchura (cm)</label>
+      <input type="number" id="rcfg-width"  value="400" min="100" max="2000">
+    </div>
+    <div class="cfg-field">
+      <label>Profundidad (cm)</label>
+      <input type="number" id="rcfg-depth"  value="300" min="100" max="2000">
+    </div>
+    <div class="cfg-field">
+      <label>Altura paredes (cm)</label>
+      <input type="number" id="rcfg-height" value="250" min="150" max="500">
+    </div>
+    <div class="cfg-modal-footer">
+      <button class="cfg-btn-cancel" onclick="closeRoomCfgModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="applyRoomCfg()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-'use strict';
-
-// ── Wood color ────────────────────────────────────────────────────────────────
-const WOOD_PRESETS = [
-  { label: 'Arce',    h: 0.076, s: 0.30, l: 0.76, hex: '#cdb896' },
-  { label: 'Pino',    h: 0.076, s: 0.38, l: 0.63, hex: '#b89868' },
-  { label: 'Roble',   h: 0.074, s: 0.40, l: 0.48, hex: '#8c6a3e' },
-  { label: 'Nogal',   h: 0.072, s: 0.38, l: 0.32, hex: '#5e3e26' },
-  { label: 'Ébano',   h: 0.070, s: 0.25, l: 0.17, hex: '#302218' },
-  { label: 'Negro',   h: 0.070, s: 0.12, l: 0.09, hex: '#181310' },
-];
-let woodPresetIdx = 1;
-
-(function initWoodPicker() {
-  const wrap = document.getElementById('wood-swatches');
-  WOOD_PRESETS.forEach((p, i) => {
-    const sw = document.createElement('div');
-    sw.className   = 'wood-swatch' + (i === woodPresetIdx ? ' active' : '');
-    sw.style.background = p.hex;
-    sw.title       = p.label;
-    sw.addEventListener('click', () => {
-      woodPresetIdx = i;
-      wrap.querySelectorAll('.wood-swatch').forEach((s, j) =>
-        s.classList.toggle('active', j === i));
-      buildFurniture();
-    });
-    wrap.appendChild(sw);
-  });
-})();
-
-function currentWood() { return WOOD_PRESETS[woodPresetIdx]; }
-
-// ── Renderer ──────────────────────────────────────────────────────────────────
-const canvasArea = document.getElementById('canvas-area');
-const renderer   = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
-canvasArea.appendChild(renderer.domElement);
-
-// ── Scene ─────────────────────────────────────────────────────────────────────
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xd2ebfa);
-scene.fog = new THREE.FogExp2(0xd2ebfa, 0.010);
-
-// ── Camera ────────────────────────────────────────────────────────────────────
-const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 300);
-let sph    = { theta: 0.40, phi: Math.PI / 2 - 0.16, radius: 30 };
-let target = new THREE.Vector3(0, 10, 0);
-
-function applyCameraPos() {
-  camera.position.set(
-    target.x + sph.radius * Math.sin(sph.phi) * Math.sin(sph.theta),
-    target.y + sph.radius * Math.cos(sph.phi),
-    target.z + sph.radius * Math.sin(sph.phi) * Math.cos(sph.theta)
-  );
-  camera.lookAt(target);
-}
-applyCameraPos();
-
-// ── Lights ────────────────────────────────────────────────────────────────────
-const ambLight = new THREE.AmbientLight(0xfff8f2, 0.60);
-scene.add(ambLight);
-
-const sun = new THREE.DirectionalLight(0xfff4e8, 0.92);
-sun.position.set(14, 22, 20);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 0.5;
-sun.shadow.camera.far  = 90;
-sun.shadow.camera.left = sun.shadow.camera.bottom = -35;
-sun.shadow.camera.right = sun.shadow.camera.top   =  35;
-scene.add(sun);
-
-const fill = new THREE.DirectionalLight(0xc8d8ff, 0.22);
-fill.position.set(-12, 6, -8);
-scene.add(fill);
-
-// Extra lights for pretty mode (off by default)
-const rimA = new THREE.DirectionalLight(0xffe0c0, 0); rimA.position.set(-10, 20, -12); scene.add(rimA);
-const rimB = new THREE.DirectionalLight(0xc0d8ff, 0); rimB.position.set( 12, -4,  -8); scene.add(rimB);
-
-let prettyMode = false;
-
-function setViewMode(mode) {
-  prettyMode = mode === 'pretty';
-  document.getElementById('vt-tech').classList.toggle('active',   !prettyMode);
-  document.getElementById('vt-pretty').classList.toggle('active',  prettyMode);
-  const overlay = document.getElementById('canvas-overlay');
-  const hint    = document.getElementById('hint');
-  if (prettyMode) {
-    overlay.style.opacity        = '0';
-    overlay.style.pointerEvents  = 'none';
-    hint.style.display       = 'none';
-    ambLight.intensity = 0.75;
-    sun.intensity      = 1.45;
-    fill.intensity     = 0.38;
-    rimA.intensity     = 0.72;
-    rimB.intensity     = 0.30;
-  } else {
-    overlay.style.opacity       = '';
-    overlay.style.pointerEvents = '';
-    hint.style.display          = '';
-    ambLight.intensity = 0.60;
-    sun.intensity      = 0.92;
-    fill.intensity     = 0.22;
-    rimA.intensity     = 0;
-    rimB.intensity     = 0;
-  }
-}
-
-// ── Floor ─────────────────────────────────────────────────────────────────────
-const floor = new THREE.Mesh(
-  new THREE.PlaneGeometry(120, 120),
-  new THREE.MeshStandardMaterial({ color: 0xb8d8ee, roughness: 0.98, metalness: 0 })
-);
-floor.rotation.x = -Math.PI / 2;
-floor.position.y = 0;
-floor.receiveShadow = true;
-scene.add(floor);
-
-// Soft shadow catcher behind the unit
-const backWall = new THREE.Mesh(
-  new THREE.PlaneGeometry(100, 80),
-  new THREE.ShadowMaterial({ opacity: 0.07 })
-);
-backWall.position.set(0, 20, -4);
-backWall.receiveShadow = true;
-scene.add(backWall);
-
-// ── Backdrop (toggleable wall behind furniture) ───────────────────────────────
-let showBackdrop = false;
-const backdropMat  = new THREE.MeshStandardMaterial({ color: 0xcec7be, roughness: 0.95, metalness: 0 });
-const backdropMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), backdropMat);
-backdropMesh.receiveShadow = true;
-backdropMesh.visible = false;
-scene.add(backdropMesh);
-
-function updateBackdrop() {
-  const f  = furniture;
-  const tw = totalWidth(f);
-  const pad = 40;
-  backdropMesh.geometry.dispose();
-  backdropMesh.geometry = new THREE.PlaneGeometry((tw + pad * 2) * CM, (f.height + pad) * CM);
-  backdropMesh.position.set(0, (f.height / 2 - pad * 0.1) * CM, -(f.depth / 2) * CM - 0.05);
-}
-
-function toggleBackdrop() {
-  showBackdrop = !showBackdrop;
-  backdropMesh.visible = showBackdrop;
-  const btn = document.getElementById('btn-backdrop');
-  if (btn) { btn.textContent = (showBackdrop ? '⊛' : '⊙') + ' Fondo'; btn.style.background = showBackdrop ? '#fdf0ec' : ''; btn.style.borderColor = showBackdrop ? '#b84020' : ''; btn.style.color = showBackdrop ? '#b84020' : ''; }
-}
-const furnitureGroup = new THREE.Group();
-scene.add(furnitureGroup);
-
-let allMeshes        = [];
-let selectedMesh     = null;
-let selectedBay      = -1;
-let overlayBtnData   = [];   // { btn, wx, wy, wz, dy }
-let coverData        = [];   // { cover, hitPlane, data }
-let hitPlanes        = [];
-let hoveredCoverIdx  = -1;
-
-// ── Build furniture ───────────────────────────────────────────────────────────
-function buildFurniture() {
-  // dispose & clear
-  while (furnitureGroup.children.length) {
-    const o = furnitureGroup.children[0];
-    if (o.geometry) o.geometry.dispose();
-    if (o.material) { o.material.dispose(); }
-    furnitureGroup.remove(o);
-  }
-  allMeshes    = [];
-  selectedMesh = null;
-  coverData = []; hitPlanes = []; hoveredCoverIdx = -1;
-  const _cl = document.getElementById('compartment-label'); if (_cl) _cl.style.display = 'none';
-
-  const f    = furniture;
-  const tw   = totalWidth(f);
-  const offX = tw / 2;   // centre unit at X=0
-
-  const wallXs = wallXPositions(f);
-  const bays   = bayGeometry(f);
-
-  const edgeMat = new THREE.LineBasicMaterial({
-    color: 0x6a4c30, transparent: true, opacity: 0.18
-  });
-
-  function makePanel(w, h, d, cx, cy, cz, userData) {
-    const geo = new THREE.BoxGeometry(w * CM, h * CM, d * CM);
-    const mat = new THREE.MeshStandardMaterial({
-      roughness: 0.66, metalness: 0.03,
-    });
-    const wood = currentWood();
-    mat.color.setHSL(wood.h, wood.s, wood.l);
-    mat._base = mat.color.clone();
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.position.set((cx - offX) * CM, cy * CM, cz * CM);
-    mesh.castShadow    = true;
-    mesh.receiveShadow = true;
-    mesh.userData      = userData;
-    mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeMat.clone()));
-    furnitureGroup.add(mesh);
-    allMeshes.push(mesh);
-    return mesh;
-  }
-
-  // Walls (N+1), full height, centred vertically
-  for (let i = 0; i < wallXs.length; i++) {
-    const wMesh = makePanel(
-      f.thickness, f.height, f.depth,
-      wallXs[i], f.height / 2, 0,
-      { type: 'wall', wallIdx: i, bayIdx: Math.min(i, numBays(f) - 1) }
-    );
-    // Front-face drag handle on inner (draggable) walls
-    if (i > 0 && i < wallXs.length - 1) {
-      const hMat = new THREE.MeshBasicMaterial({
-        color: 0x4499ff, transparent: true, opacity: 0,
-        side: THREE.DoubleSide, depthTest: false,
-      });
-      const hMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(f.thickness * CM * 0.82, f.height * CM * 0.88),
-        hMat
-      );
-      hMesh.position.z = (f.depth / 2) * CM + 0.002;
-      hMesh.userData   = { isHandle: true };
-      wMesh.add(hMesh);
-      wMesh.userData.frontHandle = hMesh;
-    }
-  }
-
-  // Slabs per bay
-  for (let b = 0; b < bays.length; b++) {
-    const bay = bays[b];
-    const yCentres = slabYCentres(f, b);
-    const total = yCentres.length;
-    for (let s = 0; s < total; s++) {
-      const mesh = makePanel(
-        bay.width, f.thickness, f.depth,
-        bay.xCentre, yCentres[s], 0,
-        { type: 'slab', bayIdx: b, slabIdx: s, totalSlabs: total }
-      );
-      // subtle lightness variation per bay for readability
-      const cw = currentWood();
-      mesh.material.color.setHSL(cw.h, cw.s, cw.l + (b % 2) * 0.04 - 0.02);
-      mesh.material._base = mesh.material.color.clone();
-
-      // Front-face drag handle (only for moveable intermediate slabs)
-      if (s > 0 && s < total - 1) {
-        const hMat = new THREE.MeshBasicMaterial({
-          color: 0x22dd66, transparent: true, opacity: 0,
-          side: THREE.DoubleSide, depthTest: false,
-        });
-        const hMesh = new THREE.Mesh(
-          new THREE.PlaneGeometry(bay.width * CM * 0.96, f.thickness * CM * 0.82),
-          hMat
-        );
-        hMesh.position.z = (f.depth / 2) * CM + 0.002;
-        hMesh.userData   = { isHandle: true };
-        mesh.add(hMesh);
-        mesh.userData.frontHandle = hMesh;
-      }
-    }
-  }
-
-  // centre camera on furniture height
-  const midY = (f.height / 2) * CM;
-  target.set(0, midY, 0);
-  sph.radius = Math.max(22, f.height * CM * 1.55);
-  applyCameraPos();
-
-  updateStatsUI();
-  updateColumnsUI();
-  updateSlabsUI();
-  buildOverlayButtons();
-  buildCompartmentCovers();
-  updateBackdrop();
-  saveState();
-}
-
-// ── Selection ─────────────────────────────────────────────────────────────────
-function deselectCurrent() {
-  if (!selectedMesh) return;
-  const m = selectedMesh.material;
-  m.color.copy(m._base);
-  m.emissive.set(0x000000);
-  m.emissiveIntensity = 0;
-  selectedMesh = null;
-}
-
-function selectMesh(mesh) {
-  deselectCurrent();
-  selectedMesh = mesh;
-  const m = mesh.material;
-  m.color.setHex(0xb84020);
-  m.emissive.setHex(0xb84020);
-  m.emissiveIntensity = 0.18;
-
-  const d   = mesh.userData;
-  const bay = (d.bayIdx !== undefined) ? d.bayIdx : -1;
-  if (bay !== selectedBay) {
-    selectedBay = bay;
-    updateSlabsUI();
-    updateColumnsUI();
-    updateStatsUI();
-  }
-  updateSelInfo(d);
-}
-
-function selectBay(b) {
-  if (b === selectedBay) return;
-  selectedBay = b;
-  updateSlabsUI();
-  updateColumnsUI();
-  updateStatsUI();
-}
-
-function updateSelInfo(d) {
-  const el = document.getElementById('sel-info');
-  if (!d) { el.innerHTML = '<span style="color:#c8c0b8">Ningún elemento</span>'; return; }
-  if (d.type === 'wall') {
-    el.innerHTML = 'Pared &nbsp;<b>' + d.wallIdx + '</b>' +
-      '<br><span style="color:#c0b8b0;font-size:11px">vertical · altura completa</span>';
-  } else {
-    const isFixed = d.slabIdx === 0 || d.slabIdx === d.totalSlabs - 1;
-    el.innerHTML = 'Balda &nbsp;<b>' + d.slabIdx + '</b> &nbsp;·&nbsp; Bahía <b>' + d.bayIdx + '</b>' +
-      (isFixed ? '<br><span style="color:#c0b8b0;font-size:11px">fija · base / techo</span>' : '');
-  }
-}
-
-// ── Pin state ─────────────────────────────────────────────────────────────────
-let pinnedTotal = false;
-const pinnedCols = new Set();
-
-function togglePinTotal() {
-  pinnedTotal = !pinnedTotal;
-  updateColumnsUI();
-}
-function togglePinCol(i) {
-  if (pinnedCols.has(i)) pinnedCols.delete(i); else pinnedCols.add(i);
-  updateColumnsUI();
-}
-function getFlexCols(exclude) {
-  return furniture.columnWidths.map((_, i) => i).filter(i => i !== exclude && !pinnedCols.has(i));
-}
-function redistributeAmong(flexIndices, delta) {
-  const f = furniture;
-  if (!flexIndices.length || delta === 0) return;
-  const flexTotal = flexIndices.reduce((s, i) => s + f.columnWidths[i], 0);
-  let remaining = delta;
-  flexIndices.forEach((i, idx) => {
-    const isLast = idx === flexIndices.length - 1;
-    const share  = isLast ? remaining : Math.round(delta * f.columnWidths[i] / flexTotal);
-    const newW   = Math.max(5, f.columnWidths[i] + share);
-    remaining   -= (newW - f.columnWidths[i]);
-    f.columnWidths[i] = newW;
-  });
-}
-
-// ── Persistence ───────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'plykit_v1';
-function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      furniture, pinnedTotal, pinnedCols: [...pinnedCols], woodPresetIdx,
-    }));
-  } catch(e) {}
-}
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const s = JSON.parse(raw);
-    if (s.furniture) {
-      Object.assign(furniture, s.furniture);
-      furniture.columnWidths = [...s.furniture.columnWidths];
-      furniture.columnSlabs  = s.furniture.columnSlabs.map(a => [...a]);
-    }
-    if (typeof s.pinnedTotal === 'boolean') pinnedTotal = s.pinnedTotal;
-    if (Array.isArray(s.pinnedCols)) { pinnedCols.clear(); s.pinnedCols.forEach(i => pinnedCols.add(i)); }
-    if (typeof s.woodPresetIdx === 'number' && s.woodPresetIdx < WOOD_PRESETS.length) {
-      woodPresetIdx = s.woodPresetIdx;
-      document.querySelectorAll('.wood-swatch').forEach((sw, j) => sw.classList.toggle('active', j === woodPresetIdx));
-    }
-  } catch(e) {}
-}
-
-// ── Stats UI (bottom) ─────────────────────────────────────────────────────────
-function updateStatsUI() {
-  const f = furniture;
-  document.getElementById('stat-tw').textContent    = Math.round(totalWidth(f)) + ' cm';
-  document.getElementById('stat-h').textContent     = f.height + ' cm';
-  document.getElementById('stat-bays').textContent  = numBays(f);
-  document.getElementById('stat-walls').textContent = numWalls(f);
-
-  const wrap = document.getElementById('col-pills');
-  wrap.innerHTML = '';
-  f.columnWidths.forEach((w, i) => {
-    const p = document.createElement('span');
-    p.className   = 'bay-pill' + (i === selectedBay ? ' active' : '');
-    p.textContent = 'C' + i + '  ' + w + ' cm';
-    p.addEventListener('click', () => selectBay(i));
-    wrap.appendChild(p);
-  });
-}
-
-// ── Columns UI (sidebar) ──────────────────────────────────────────────────────
-function updateColumnsUI() {
-  const f  = furniture;
-  const el = document.getElementById('columns-list');
-  el.innerHTML = '';
-  document.getElementById('col-count').textContent = '(' + numBays(f) + ')';
-
-  // Sync pin-total button state
-  const ptb = document.getElementById('pin-total-btn');
-  if (ptb) ptb.classList.toggle('pinned', pinnedTotal);
-
-  // Keep global-width input in sync (show current usable width)
-  const gwEl = document.getElementById('in-global-width');
-  if (gwEl && document.activeElement !== gwEl)
-    gwEl.value = Math.round(usableWidth(f));
-  f.columnWidths.forEach((w, i) => {
-    const isPinned  = pinnedCols.has(i);
-    const row = document.createElement('div');
-    row.className    = 'col-row' + (i === selectedBay ? ' active' : '');
-    row.dataset.bay  = i;
-    const canDelete  = numBays(f) > 1;
-    row.innerHTML =
-      '<span class="row-badge">C' + i + '</span>' +
-      '<input type="number" class="in-sm" value="' + w + '" min="5" max="500"' +
-        ' onclick="selectBay(' + i + ')" onchange="updateColumnWidthUI(' + i + ', +this.value)">' +
-      '<span class="unit-lbl">cm</span>' +
-      '<button class="pin-btn' + (isPinned ? ' pinned' : '') + '" onclick="togglePinCol(' + i + ')" title="Fijar columna">⊙</button>' +
-      (canDelete ? '<button class="btn btn-danger btn-xs" onclick="removeColumnAt(' + i + ')">×</button>' : '');
-    row.addEventListener('click', e => { if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') selectBay(i); });
-    el.appendChild(row);
-  });
-}
-
-// ── Slabs UI (sidebar) ────────────────────────────────────────────────────────
-function updateSlabsUI() {
-  const f   = furniture;
-  const el  = document.getElementById('slabs-list');
-  const lbl = document.getElementById('sel-bay-label');
-
-  if (selectedBay < 0 || selectedBay >= numBays(f)) {
-    lbl.textContent = 'sin selección';
-    el.innerHTML    = '<span style="color:#c8c0b8;font-size:11px">Selecciona una columna</span>';
-    return;
-  }
-
-  lbl.textContent  = 'bahía ' + selectedBay;
-  const rels = f.columnSlabs[selectedBay];
-  el.innerHTML     = '';
-
-  if (rels.length === 0) {
-    const info = document.createElement('div');
-    info.style.cssText = 'font-size:11px;color:#c8c0b8;margin-bottom:7px';
-    info.textContent   = 'Sin baldas intermedias';
-    el.appendChild(info);
-  }
-
-  // cumulative labels so user sees actual height
-  let cursor = 0;
-  rels.forEach((rel, i) => {
-    cursor += rel;
-    const row = document.createElement('div');
-    row.className = 'slab-row';
-    row.innerHTML =
-      '<span class="row-badge">S' + (i + 1) + '</span>' +
-      '<input type="number" class="in-sm" value="' + rel + '" min="1" max="500"' +
-        ' onchange="updateSlabUI(' + i + ', +this.value)">' +
-      '<span class="unit-lbl">cm &nbsp;<span style="color:#c8c0b8">' + cursor + '</span></span>' +
-      '<button class="btn btn-danger btn-xs" onclick="removeSlabUI(' + i + ')">×</button>';
-    el.appendChild(row);
-  });
-
-  // add form
-  const addRow = document.createElement('div');
-  addRow.style.cssText = 'display:flex;gap:5px;margin-top:8px;align-items:center';
-  addRow.innerHTML =
-    '<input type="number" id="in-slab-dist" class="in-sm" value="60" min="1" max="500">' +
-    '<span class="unit-lbl">cm</span>' +
-    '<button class="btn btn-ghost btn-xs" style="flex:1;margin-top:0" onclick="addSlabUI()">+ balda</button>';
-  el.appendChild(addRow);
-}
-
-// ── Mutation callbacks ────────────────────────────────────────────────────────
-function applyDimensions() {
-  furniture.height    = Math.max(30,  parseFloat(document.getElementById('in-height').value) || 200);
-  furniture.depth     = Math.max(5,   parseFloat(document.getElementById('in-depth').value)  || 32);
-  furniture.thickness = Math.max(0.3, parseFloat(document.getElementById('in-thick').value)  || 1.8);
-  buildFurniture();
-}
-
-function addColumnUI() {
-  const f = furniture;
-  const newW = 40;
-  if (pinnedTotal) {
-    const flex = getFlexCols(-1);
-    if (!flex.length) { addColumn(f, newW, []); }
-    else { redistributeAmong(flex, -newW); addColumn(f, newW, []); }
-  } else {
-    addColumn(f, newW, []);
-  }
-  selectedBay = numBays(f) - 1;
-  buildFurniture();
-}
-
-function removeColumnAt(i) {
-  if (numBays(furniture) <= 1) return;
-  const freedW = furniture.columnWidths[i];
-  furniture.columnWidths.splice(i, 1);
-  furniture.columnSlabs.splice(i, 1);
-  // re-index pinnedCols
-  const newPinned = new Set();
-  for (const p of pinnedCols) {
-    if (p < i) newPinned.add(p);
-    else if (p > i) newPinned.add(p - 1);
-  }
-  pinnedCols.clear(); newPinned.forEach(p => pinnedCols.add(p));
-  // if total pinned, redistribute freed width
-  if (pinnedTotal) {
-    const flex = getFlexCols(-1);
-    if (flex.length) redistributeAmong(flex, freedW);
-  }
-  selectedBay = Math.min(selectedBay, numBays(furniture) - 1);
-  buildFurniture();
-}
-
-function updateColumnWidthUI(bay, w) {
-  const f = furniture;
-  w = Math.max(5, w);
-  if (pinnedTotal && !pinnedCols.has(bay)) {
-    const delta = w - f.columnWidths[bay];
-    const flex  = getFlexCols(bay);
-    if (flex.length) redistributeAmong(flex, -delta);
-  }
-  updateColumnWidth(f, bay, w);
-  selectedBay = bay;
-  buildFurniture();
-}
-
-function applyGlobalWidth(newUsable) {
-  const f = furniture;
-  if (!newUsable || newUsable < 1) return;
-  const pinnedW = [...pinnedCols].reduce((s, i) => s + f.columnWidths[i], 0);
-  const flexIdx = f.columnWidths.map((_, i) => i).filter(i => !pinnedCols.has(i));
-  if (!flexIdx.length) return;
-  const targetFlex = newUsable - pinnedW;
-  if (targetFlex < flexIdx.length * 5) return; // can't fit min 5cm each
-  const currentFlex = flexIdx.reduce((s, i) => s + f.columnWidths[i], 0);
-  if (currentFlex <= 0) return;
-  const ratio = targetFlex / currentFlex;
-  flexIdx.forEach(i => { f.columnWidths[i] = Math.max(5, Math.round(f.columnWidths[i] * ratio)); });
-  // Correct rounding drift on last flex col
-  const driftTarget = targetFlex - flexIdx.reduce((s, i) => s + f.columnWidths[i], 0);
-  const lastFlex = flexIdx[flexIdx.length - 1];
-  f.columnWidths[lastFlex] = Math.max(5, f.columnWidths[lastFlex] + driftTarget);
-  buildFurniture();
-}
-
-function addSlabUI() {
-  if (selectedBay < 0) return;
-  const dist = parseFloat(document.getElementById('in-slab-dist').value) || 60;
-  addSlab(furniture, selectedBay, dist);
-  buildFurniture();
-}
-
-function removeSlabUI(i) {
-  removeSlab(furniture, selectedBay, i);
-  buildFurniture();
-}
-
-function insertSlabAbove(bay, slabIdx) {
-  const f        = furniture;
-  const yCentres = slabYCentres(f, bay);
-  const cursor_s    = yCentres[slabIdx]     - f.thickness / 2;  // bottom face of slab s
-  const cursor_next = yCentres[slabIdx + 1] - f.thickness / 2;  // bottom face of next slab
-  // new slab bottom = top of slab s + 20 cm gap
-  const new_cursor  = cursor_s + f.thickness + 20;
-  if (new_cursor + f.thickness >= cursor_next - 1) return; // not enough room
-  const new_rel = Math.round(new_cursor - cursor_s); // relative from previous cursor
-  const insertAt = slabIdx; // position in columnSlabs (0 = before first stored slab)
-  if (insertAt < f.columnSlabs[bay].length) {
-    // shrink the relative of the slab that was previously above
-    const adj = Math.max(1, Math.round(cursor_next - new_cursor));
-    f.columnSlabs[bay].splice(insertAt, 0, new_rel);
-    f.columnSlabs[bay][insertAt + 1] = adj;
-  } else {
-    f.columnSlabs[bay].push(new_rel);
-  }
-  selectedBay = bay;
-  buildFurniture();
-}
-
-function updateSlabUI(i, v) {
-  updateSlab(furniture, selectedBay, i, v);
-  buildFurniture();
-}
-
-// ── Camera reset ──────────────────────────────────────────────────────────────
-function resetCamera() {
-  const h = furniture.height * CM;
-  target.set(0, h / 2, 0);
-  sph = { theta: 0.40, phi: Math.PI / 2 - 0.16, radius: Math.max(22, h * 1.55) };
-  applyCameraPos();
-}
-
-// ── Canvas overlay buttons ────────────────────────────────────────────────────
-function buildOverlayButtons() {
-  const overlay = document.getElementById('canvas-overlay');
-  overlay.innerHTML = '';
-  overlayBtnData = [];
-
-  const f    = furniture;
-  const offX = totalWidth(f) / 2;
-  const bays = bayGeometry(f);
-
-  // '−' button below each bay's front-bottom-centre
-  bays.forEach((bay, i) => {
-    const btn = document.createElement('button');
-    btn.className   = 'ov-btn ov-rem';
-    btn.textContent = '−';
-    btn.title       = 'Eliminar columna ' + i;
-    btn.addEventListener('click', e => { e.stopPropagation(); removeColumnAt(i); });
-    overlay.appendChild(btn);
-    overlayBtnData.push({
-      btn,
-      wx: (bay.xCentre - offX) * CM,
-      wy: 0,
-      wz: (f.depth / 2) * CM,
-      dy: 22,
-    });
-  });
-
-  // '+' button on top of each slab (per bay)
-  bays.forEach((bay, b) => {
-    const yCentres = slabYCentres(f, b);
-    // all slabs except the implicit top (last index)
-    for (let s = 0; s < yCentres.length - 1; s++) {
-      const cursor_s    = yCentres[s]     - f.thickness / 2;
-      const cursor_next = yCentres[s + 1] - f.thickness / 2;
-      // Only show button if there's enough vertical room for the new slab
-      const new_cursor = cursor_s + f.thickness + 20;
-      if (new_cursor + f.thickness >= cursor_next - 1) continue;
-      const btn = document.createElement('button');
-      btn.className   = 'ov-btn ov-add ov-add-slab';
-      btn.textContent = '+';
-      btn.title       = 'Añadir balda encima';
-      const _b = b, _s = s;
-      btn.addEventListener('click', e => { e.stopPropagation(); insertSlabAbove(_b, _s); });
-      overlay.appendChild(btn);
-      overlayBtnData.push({
-        btn,
-        wx: (bay.xCentre - offX) * CM,
-        wy: (yCentres[s] + f.thickness / 2) * CM,  // top face of slab
-        wz: 0,
-        dy: -13,
-      });
-    }
-  });
-
-  // '+' button to the right at mid-height
-  const addBtn = document.createElement('button');
-  addBtn.className   = 'ov-btn ov-add';
-  addBtn.textContent = '+';
-  addBtn.title       = 'Añadir columna';
-  addBtn.addEventListener('click', e => { e.stopPropagation(); addColumnUI(); });
-  overlay.appendChild(addBtn);
-  overlayBtnData.push({
-    btn: addBtn,
-    wx: (totalWidth(f) / 2 + 2.8) * CM,
-    wy: (f.height / 2) * CM,
-    wz: (f.depth / 2) * CM,
-    dy: 0,
-  });
-}
-
-function positionOverlayButtons() {
-  if (!overlayBtnData.length) return;
-  const el = renderer.domElement;
-  const w  = el.clientWidth, h = el.clientHeight;
-  for (const item of overlayBtnData) {
-    const v  = new THREE.Vector3(item.wx, item.wy, item.wz).project(camera);
-    const sx = (v.x + 1) / 2 * w;
-    const sy = -(v.y - 1) / 2 * h + (item.dy || 0);
-    const ok = v.z < 1 && sx > 10 && sx < w - 10 && sy > 0 && sy < h + 40;
-    item.btn.style.left       = sx + 'px';
-    item.btn.style.top        = sy + 'px';
-    item.btn.style.visibility = ok ? 'visible' : 'hidden';
-  }
-}
-
-function _roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
-  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
-  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r); ctx.closePath();
-}
-
-function makeDimSprite(text, sizeCm) {
-  const W = 300, H = 80;
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const ctx = cv.getContext('2d');
-  ctx.clearRect(0, 0, W, H);
-  ctx.fillStyle = 'rgba(255,248,242,0.96)'; _roundRect(ctx, 3, 3, W - 6, H - 6, 13); ctx.fill();
-  ctx.strokeStyle = 'rgba(184,64,32,0.38)'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = '#b84020'; ctx.font = 'bold 40px system-ui,sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, W / 2, H / 2);
-  const tex = new THREE.CanvasTexture(cv);
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0, depthTest: false });
-  const sp = new THREE.Sprite(mat);
-  const s = Math.max(3.2, Math.min(6.5, sizeCm * CM * 0.7));
-  sp.scale.set(s, s * H / W, 1);
-  return sp;
-}
-
-function buildDimLines(xL, xR, yB, yT, cx, cy, z, wCm, hCm) {
-  const objs = [];
-  const tk = 0.13; // tick half-length
-  const dz = z + 0.003;
-
-  function dashed() {
-    return new THREE.LineDashedMaterial({ color: 0x9a7a60, dashSize: 0.14, gapSize: 0.08, transparent: true, opacity: 0 });
-  }
-  function solid() {
-    return new THREE.LineBasicMaterial({ color: 0x9a7a60, transparent: true, opacity: 0 });
-  }
-
-  // Width: dashed horizontal at yB
-  const wL = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(xL, yB, dz), new THREE.Vector3(xR, yB, dz)]),
-    dashed());
-  wL.computeLineDistances(); objs.push(wL);
-
-  // Width ticks (vertical at xL and xR)
-  const wT = new THREE.LineSegments(
-    new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(xL, yB - tk, dz), new THREE.Vector3(xL, yB + tk, dz),
-      new THREE.Vector3(xR, yB - tk, dz), new THREE.Vector3(xR, yB + tk, dz),
-    ]), solid());
-  objs.push(wT);
-
-  // Height: dashed vertical at xL
-  const hL = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(xL, yB, dz), new THREE.Vector3(xL, yT, dz)]),
-    dashed());
-  hL.computeLineDistances(); objs.push(hL);
-
-  // Height ticks (horizontal at yB and yT)
-  const hT = new THREE.LineSegments(
-    new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(xL - tk, yB, dz), new THREE.Vector3(xL + tk, yB, dz),
-      new THREE.Vector3(xL - tk, yT, dz), new THREE.Vector3(xL + tk, yT, dz),
-    ]), solid());
-  objs.push(hT);
-
-  // Width label sprite (center of width line)
-  const wSp = makeDimSprite(Math.round(wCm * 10) / 10 + ' cm', wCm);
-  wSp.position.set(cx, yB, dz + 0.01); objs.push(wSp);
-
-  // Height label sprite (center of height line)
-  const hSp = makeDimSprite(Math.round(hCm * 10) / 10 + ' cm', hCm);
-  hSp.position.set(xL, cy, dz + 0.01); objs.push(hSp);
-
-  return objs;
-}
-
-function setCoverOpacity(idx, opacity) {
-  if (idx < 0 || !coverData[idx]) return;
-  const c = coverData[idx];
-  c.cover.material.opacity = opacity;
-  for (const o of c.dimObjs) {
-    if (o.material) o.material.opacity = opacity;
-  }
-}
-
-function buildCompartmentCovers() {
-  const f    = furniture;
-  const offX = totalWidth(f) / 2;
-  const bays = bayGeometry(f);
-  for (let b = 0; b < bays.length; b++) {
-    const bay      = bays[b];
-    const yCentres = slabYCentres(f, b);
-    for (let s = 0; s < yCentres.length - 1; s++) {
-      const yBottom = yCentres[s]     + f.thickness / 2;
-      const yTop    = yCentres[s + 1] - f.thickness / 2;
-      const hCm     = yTop - yBottom;
-      if (hCm < 1) continue;
-      const yCentre = (yBottom + yTop) / 2;
-      const zFront  = f.depth / 2;
-      const posX    = (bay.xCentre - offX) * CM;
-      const posY    = yCentre * CM;
-      const posZ    = zFront * CM + 0.004;
-      const xL      = (bay.xCentre - offX - bay.width / 2) * CM;
-      const xR      = (bay.xCentre - offX + bay.width / 2) * CM;
-      const yB3     = yBottom * CM;
-      const yT3     = yTop    * CM;
-
-      const geo = new THREE.PlaneGeometry(bay.width * CM, hCm * CM);
-      const mat = new THREE.MeshBasicMaterial({
-        color: 0xfaf5ef, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide,
-      });
-      const cover = new THREE.Mesh(geo, mat);
-      cover.position.set(posX, posY, posZ);
-      furnitureGroup.add(cover);
-
-      const hitGeo = new THREE.PlaneGeometry(bay.width * CM, hCm * CM);
-      const hitMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
-      const hitPlane = new THREE.Mesh(hitGeo, hitMat);
-      hitPlane.position.set(posX, posY, posZ + 0.001);
-      hitPlane.userData = { type: 'compartmentHit', coverIdx: coverData.length };
-      furnitureGroup.add(hitPlane);
-      hitPlanes.push(hitPlane);
-
-      const dimObjs = buildDimLines(xL, xR, yB3, yT3, posX, posY, posZ, bay.width, hCm);
-      dimObjs.forEach(o => furnitureGroup.add(o));
-
-      coverData.push({ cover, hitPlane, dimObjs,
-        data: { wcm: Math.round(bay.width * 10) / 10, hcm: Math.round(hCm * 10) / 10, wx: posX, wy: posY, wz: posZ },
-      });
-    }
-  }
-}
-
-function positionCompartmentLabel() {} // replaced by 3D sprites
-
-function clearCoverHover() {
-  setCoverOpacity(hoveredCoverIdx, 0);
-  hoveredCoverIdx = -1;
-}
-
-
-// ── Shared raycaster ─────────────────────────────────────────────────────────
-const raycaster = new THREE.Raycaster();
-const mouse2    = new THREE.Vector2();
-
-// ── Hover + slab drag state ───────────────────────────────────────────────────
-function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-
-let hoverMesh      = null;   // hoverable mesh (slab or inner wall) with front face hovered
-let isDraggingSlab = false;
-let dragData       = null;
-let isDraggingWall = false;
-let wallDragData   = null;
-
-function setHover(mesh) {
-  if (hoverMesh === mesh) return;
-  if (hoverMesh) {
-    if (hoverMesh.userData.frontHandle) hoverMesh.userData.frontHandle.material.opacity = 0;
-    if (hoverMesh !== selectedMesh) {
-      hoverMesh.material.emissive.set(0x000000);
-      hoverMesh.material.emissiveIntensity = 0;
-    }
-  }
-  hoverMesh = mesh;
-  if (hoverMesh) {
-    if (hoverMesh.userData.frontHandle) hoverMesh.userData.frontHandle.material.opacity = 0.75;
-    if (hoverMesh !== selectedMesh) {
-      hoverMesh.material.emissive.setHex(hoverMesh.userData.type === 'wall' ? 0x2255aa : 0x116633);
-      hoverMesh.material.emissiveIntensity = 0.22;
-    }
-  }
-  const isWall = mesh && mesh.userData.type === 'wall';
-  canvasArea.style.cursor = mesh ? (isWall ? 'ew-resize' : 'ns-resize') : (dragging ? 'grabbing' : 'grab');
-}
-
-// ── Orbit controls ────────────────────────────────────────────────────────────
-let dragging = false, prevMouse = { x: 0, y: 0 }, clickOrigin = { x: 0, y: 0 };
-
-renderer.domElement.addEventListener('mousedown', e => {
-  clickOrigin = { x: e.clientX, y: e.clientY };
-  clearCoverHover();
-
-  // ── Wall drag start (horizontal) ─────────────────────────────────────────
-  if (hoverMesh && e.button === 0 && hoverMesh.userData.type === 'wall') {
-    const d  = hoverMesh.userData;
-    const f  = furniture;
-    const wi = d.wallIdx;
-    const wallPos = new THREE.Vector3();
-    hoverMesh.getWorldPosition(wallPos);
-    const dist       = camera.position.distanceTo(wallPos);
-    const vHalfRad   = (camera.fov / 2) * Math.PI / 180;
-    const worldPerPx = (2 * dist * Math.tan(vHalfRad)) / renderer.domElement.clientHeight;
-    const camRight   = new THREE.Vector3()
-      .crossVectors(camera.getWorldDirection(new THREE.Vector3()), camera.up)
-      .normalize();
-    isDraggingWall = true;
-    const nb = numBays(f);
-    if (wi === 0) {
-      wallDragData = { mesh: hoverMesh, wallIdx: wi, startClientX: e.clientX, worldPerPx,
-        camRightX: camRight.x || 0.001, outerSide: 'left',
-        startRightW: f.columnWidths[0], lb: 5 };
-    } else if (wi === numWalls(f) - 1) {
-      wallDragData = { mesh: hoverMesh, wallIdx: wi, startClientX: e.clientX, worldPerPx,
-        camRightX: camRight.x || 0.001, outerSide: 'right',
-        startLeftW: f.columnWidths[nb - 1], lb: 5 };
-    } else {
-      wallDragData = {
-        mesh: hoverMesh, wallIdx: wi,
-        startClientX: e.clientX, worldPerPx,
-        camRightX: camRight.x || 0.001,
-        startLeftW:  f.columnWidths[wi - 1],
-        startRightW: f.columnWidths[wi],
-        lb: 5, ub: f.columnWidths[wi - 1] + f.columnWidths[wi] - 5,
-      };
-    }
-    return;
-  }
-
-  // ── Slab drag start (vertical) ───────────────────────────────────────────
-  if (hoverMesh && e.button === 0) {
-    const d    = hoverMesh.userData;
-    const f    = furniture;
-
-    // Top slab: drag resizes total height
-    if (d.slabIdx === d.totalSlabs - 1) {
-      const slabPos = new THREE.Vector3();
-      hoverMesh.getWorldPosition(slabPos);
-      const dist      = camera.position.distanceTo(slabPos);
-      const vHalfRad  = (camera.fov / 2) * Math.PI / 180;
-      const worldPerPx = (2 * dist * Math.tan(vHalfRad)) / renderer.domElement.clientHeight;
-      isDraggingSlab = true;
-      dragData = { mesh: hoverMesh, isTopSlab: true,
-        startClientY: e.clientY, worldPerPx, startHeight: f.height, lb: 30 };
-      return;
-    }
-
-    const rels = f.columnSlabs[d.bayIdx];
-    const ri   = d.slabIdx - 1;   // relIdx: slabIdx 1 → rels[0]
-
-    // Absolute Y (cm) of this slab's bottom face
-    let absY = 0;
-    for (let i = 0; i <= ri; i++) absY += rels[i];
-
-    // Lower bound: top face of previous reference
-    const prevAbsY = absY - rels[ri];
-    const lb = prevAbsY + f.thickness;
-
-    // Upper bound: bottom face of next slab (kept fixed) or top slab
-    const nextRel = (ri + 1 < rels.length) ? rels[ri + 1] : null;
-    const ub = nextRel !== null
-      ? absY + nextRel - Math.max(f.thickness, 1)
-      : f.height - f.thickness * 2;
-
-    // Pixel → world-Y scale (computed once at drag start)
-    const slabPos = new THREE.Vector3();
-    hoverMesh.getWorldPosition(slabPos);
-    const dist      = camera.position.distanceTo(slabPos);
-    const vHalfRad  = (camera.fov / 2) * Math.PI / 180;
-    const worldPerPx = (2 * dist * Math.tan(vHalfRad)) / renderer.domElement.clientHeight;
-
-    isDraggingSlab = true;
-    dragData = {
-      mesh: hoverMesh, bayIdx: d.bayIdx, relIdx: ri,
-      startClientY: e.clientY, worldPerPx,
-      startAbsY: absY, startRel: rels[ri], nextRel, lb, ub,
-    };
-    return;
-  }
-
-  // ── Normal camera drag ───────────────────────────────────────────────────
-  dragging  = true;
-  prevMouse = { x: e.clientX, y: e.clientY };
-});
-
-renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
-
-window.addEventListener('mousemove', e => {
-  const rect = renderer.domElement.getBoundingClientRect();
-
-  // ── Wall drag (horizontal) ────────────────────────────────────────────────
-  if (isDraggingWall && wallDragData) {
-    const f  = furniture;
-    const wd = wallDragData;
-    const screenDX = e.clientX - wd.startClientX;
-    const sign     = wd.camRightX > 0 ? 1 : -1;
-    const deltaCm  = sign * screenDX * wd.worldPerPx / CM;
-
-    if (wd.outerSide === 'right') {
-      f.columnWidths[numBays(f) - 1] = Math.max(wd.lb, Math.round(wd.startLeftW + deltaCm));
-    } else if (wd.outerSide === 'left') {
-      f.columnWidths[0] = Math.max(wd.lb, Math.round(wd.startRightW - deltaCm));
-    } else {
-      const newLeftW = clamp(Math.round(wd.startLeftW + deltaCm), wd.lb, wd.ub);
-      const delta    = newLeftW - wd.startLeftW;
-      f.columnWidths[wd.wallIdx - 1] = newLeftW;
-      f.columnWidths[wd.wallIdx]     = Math.max(wd.lb, wd.startRightW - delta);
-    }
-
-    const offX  = totalWidth(f) / 2;
-    const wallXs = wallXPositions(f);
-    const bays  = bayGeometry(f);
-
-    for (const m of allMeshes) {
-      if (m.userData.type === 'wall') {
-        m.position.x = (wallXs[m.userData.wallIdx] - offX) * CM;
-      } else if (m.userData.type === 'slab') {
-        const bi = m.userData.bayIdx;
-        const bay = bays[bi];
-        const origW = m.geometry.parameters.width / CM;
-        m.scale.x    = bay.width / origW;
-        m.position.x = (bay.xCentre - offX) * CM;
-      }
-    }
-    updateColumnsUI();
-    updateStatsUI();
-    return;
-  }
-
-  // ── Slab drag ────────────────────────────────────────────────────────────
-  if (isDraggingSlab && dragData) {
-    const f        = furniture;
-    const screenDY = e.clientY - dragData.startClientY;
-    const deltaCm  = -screenDY * dragData.worldPerPx / CM;
-
-    if (dragData.isTopSlab) {
-      f.height = Math.max(dragData.lb, Math.round(dragData.startHeight + deltaCm));
-      for (const m of allMeshes) {
-        if (m.userData.type === 'slab' && m.userData.slabIdx === m.userData.totalSlabs - 1)
-          m.position.y = (f.height - f.thickness / 2) * CM;
-        else if (m.userData.type === 'wall') {
-          const origH = m.geometry.parameters.height / CM;
-          m.scale.y   = f.height / origH;
-          m.position.y = (f.height / 2) * CM;
-        }
-      }
-      document.getElementById('in-height').value = f.height;
-      updateStatsUI();
-      return;
-    }
-    const newAbsY  = clamp(dragData.startAbsY + deltaCm, dragData.lb, dragData.ub);
-    const newRel   = Math.max(1, Math.round(newAbsY - (dragData.startAbsY - dragData.startRel)));
-
-    f.columnSlabs[dragData.bayIdx][dragData.relIdx] = newRel;
-    if (dragData.nextRel !== null) {
-      f.columnSlabs[dragData.bayIdx][dragData.relIdx + 1] =
-        Math.max(1, dragData.nextRel - (newRel - dragData.startRel));
-    }
-    // Move mesh directly (smooth, no full rebuild)
-    dragData.mesh.position.y = (newAbsY + f.thickness / 2) * CM;
-    updateSlabsUI();
-    return;
-  }
-
-  // ── Camera orbit / pan ───────────────────────────────────────────────────
-  if (dragging) {
-    const dx = e.clientX - prevMouse.x, dy = e.clientY - prevMouse.y;
-    prevMouse = { x: e.clientX, y: e.clientY };
-    if (e.buttons & 1) {
-      sph.theta -= dx * 0.006;
-      sph.phi    = clamp(sph.phi + dy * 0.006, 0.06, Math.PI - 0.06);
-    } else if (e.buttons & 2) {
-      const speed = sph.radius * 0.0012;
-      const right = new THREE.Vector3()
-        .crossVectors(camera.getWorldDirection(new THREE.Vector3()), camera.up).normalize();
-      target.addScaledVector(right, -dx * speed);
-      target.y += dy * speed;
-    }
-    applyCameraPos();
-    return;
-  }
-
-  // ── Hover detection ──────────────────────────────────────────────────────
-  mouse2.set(
-    ((e.clientX - rect.left) / rect.width)  *  2 - 1,
-   -((e.clientY - rect.top)  / rect.height) *  2 + 1
-  );
-  raycaster.setFromCamera(mouse2, camera);
-  const hits = raycaster.intersectObjects(allMeshes, false);
-
-  let found = null;
-  for (const hit of hits) {
-    const obj  = hit.object;
-    const type = obj.userData.type;
-    if (type === 'slab') {
-      const { slabIdx, totalSlabs } = obj.userData;
-      if (slabIdx > 0) { found = obj; break; }  // include top (totalSlabs-1), exclude bottom (0)
-    } else if (type === 'wall') {
-      const { wallIdx } = obj.userData;
-      found = obj; break;  // all walls draggable (outer = resize total width)
-    }
-  }
-  setHover(found);
-
-  // Compartment cover hover
-  const coverHits = (prettyMode || hoverMesh) ? [] : raycaster.intersectObjects(hitPlanes);
-  const newCoverIdx = coverHits.length > 0 ? coverHits[0].object.userData.coverIdx : -1;
-  if (newCoverIdx !== hoveredCoverIdx) {
-    setCoverOpacity(hoveredCoverIdx, 0);
-    hoveredCoverIdx = newCoverIdx;
-    setCoverOpacity(hoveredCoverIdx, 0.92);
-  }
-});
-
-window.addEventListener('mouseup', () => {
-  if (isDraggingWall) {
-    isDraggingWall = false;
-    wallDragData   = null;
-    buildFurniture();
-    return;
-  }
-  if (isDraggingSlab) {
-    isDraggingSlab = false;
-    dragData       = null;
-    buildFurniture();
-    return;
-  }
-  dragging = false;
-  const isWall = hoverMesh && hoverMesh.userData.type === 'wall';
-  canvasArea.style.cursor = hoverMesh ? (isWall ? 'ew-resize' : 'ns-resize') : 'grab';
-});
-
-renderer.domElement.addEventListener('wheel', e => {
-  e.preventDefault();
-  sph.radius = clamp(sph.radius + e.deltaY * 0.025, 2, 100);
-  applyCameraPos();
-}, { passive: false });
-
-// ── Click → select ────────────────────────────────────────────────────────────
-renderer.domElement.addEventListener('click', e => {
-  if (isDraggingSlab) return;  // just finished drag, skip
-  if (Math.hypot(e.clientX - clickOrigin.x, e.clientY - clickOrigin.y) > 5) return;
-  const rect = renderer.domElement.getBoundingClientRect();
-  mouse2.set(
-    ((e.clientX - rect.left) / rect.width)  *  2 - 1,
-   -((e.clientY - rect.top)  / rect.height) *  2 + 1
-  );
-  raycaster.setFromCamera(mouse2, camera);
-  const hits = raycaster.intersectObjects(allMeshes, false);
-  if (hits.length) {
-    selectMesh(hits[0].object);
-  } else {
-    deselectCurrent();
-    updateSelInfo(null);
-  }
-});
-
-// ── Resize ────────────────────────────────────────────────────────────────────
-function onResize() {
-  const w = canvasArea.clientWidth, h = canvasArea.clientHeight;
-  renderer.setSize(w, h);
-  camera.aspect = w / h;
-  camera.updateProjectionMatrix();
-}
-window.addEventListener('resize', onResize);
-onResize();
-
-// ── File menu ─────────────────────────────────────────────────────────────────
-function toggleFileMenu(e) {
-  e.stopPropagation();
-  document.getElementById('file-menu').classList.toggle('open');
-}
-function closeFileMenu() {
-  document.getElementById('file-menu').classList.remove('open');
-}
-document.addEventListener('click', closeFileMenu);
-
-function downloadProject() {
-  const data = { furniture, pinnedTotal, pinnedCols: [...pinnedCols], woodPresetIdx };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = 'plykit-project.json'; a.click();
-  URL.revokeObjectURL(url);
-  closeFileMenu();
-}
-
-function uploadProject(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const s = JSON.parse(ev.target.result);
-      if (s.furniture) {
-        Object.assign(furniture, s.furniture);
-        furniture.columnWidths = [...s.furniture.columnWidths];
-        furniture.columnSlabs  = s.furniture.columnSlabs.map(a => [...a]);
-      }
-      if (typeof s.pinnedTotal === 'boolean') pinnedTotal = s.pinnedTotal;
-      if (Array.isArray(s.pinnedCols)) { pinnedCols.clear(); s.pinnedCols.forEach(i => pinnedCols.add(i)); }
-      if (typeof s.woodPresetIdx === 'number' && s.woodPresetIdx < WOOD_PRESETS.length) {
-        woodPresetIdx = s.woodPresetIdx;
-        document.querySelectorAll('.wood-swatch').forEach((sw, j) => sw.classList.toggle('active', j === woodPresetIdx));
-      }
-      const ih = document.getElementById('in-height'); if (ih) ih.value = furniture.height;
-      const id = document.getElementById('in-depth');  if (id) id.value = furniture.depth;
-      const it = document.getElementById('in-thick');  if (it) it.value = furniture.thickness;
-      buildFurniture();
-    } catch(err) { alert('Archivo inválido'); }
-    input.value = '';
-  };
-  reader.readAsText(file);
-  closeFileMenu();
-}
-
-// ── Animate ───────────────────────────────────────────────────────────────────
-(function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); positionOverlayButtons(); positionCompartmentLabel(); })();
-
-loadState();
-// Sync dimension inputs from (possibly restored) furniture
-(function syncInputs() {
-  const f = furniture;
-  const ih = document.getElementById('in-height');   if (ih) ih.value = f.height;
-  const id = document.getElementById('in-depth');    if (id) id.value = f.depth;
-  const it = document.getElementById('in-thick');    if (it) it.value = f.thickness;
-})();
-buildFurniture();
+  (function() {
+    var x = new XMLHttpRequest();
+    x.open('GET', 'config.json', false);
+    x.send();
+    window.appConfig = x.status === 200 ? JSON.parse(x.responseText) : {};
+  })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="sketch.js"></script>
+<script src="js/wood.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/view-mode.js"></script>
+<script src="js/slab-links.js"></script>
+<script src="js/drag-behavior.js"></script>
+<script src="js/snap-visual.js"></script>
+<script src="js/furniture3d.js"></script>
+<script src="js/columns-ui.js"></script>
+<script src="js/config-modal.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/interaction3d.js"></script>
+<script src="js/brush-tool.js"></script>
+<script src="js/shelf-tool.js"></script>
+<script src="js/bulldozer.js"></script>
+<script src="js/plan2d.js"></script>
+<script src="js/projects.js"></script>
+<script src="js/room.js"></script>
+<script src="js/room3d.js"></script>
+<script src="js/room2d.js"></script>
+<script src="js/side-panel.js"></script>
+<script src="js/app.js"></script>
+
 </body>
 </html>

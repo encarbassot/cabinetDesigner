@@ -1,0 +1,42 @@
+{
+  "ficus_bonsai.glb": {
+    "placement": "shelf",
+    "scaleMult": 1.0,
+    "rotationY": 90
+  },
+  "dirty_boots_low_poly.glb": {
+    "placement": "floor",
+    "targetCm": 25,
+    "scaleMult": 2.0,
+    "rotationY": 0,
+    "zOffsetCm": -55,
+    "xFraction": 0.25
+  },
+  "rubiks_cube.glb": {
+    "placement": "shelf",
+    "targetCm": 10
+  },
+  "dslr_camera.glb": {
+    "placement": "shelf",
+    "targetCm": 25
+  },
+  "headphones.glb":{
+    "placement": "shelf",
+    "targetCm": 40,
+    "rotationX": -20,
+    "zOffsetCm":0,
+    "yOffsetCm": -10
+    
+  },  "guitar.glb":{
+    "placement": "shelf",
+    "targetCm": 90
+  },"teddybear_toy.glb":{
+    "placement": "shelf",
+    "targetCm": 60
+  },"variety_of_books.glb":{
+    "placement": "shelf",
+    "targetCm": 60,
+    "rotationY": -90,
+    "align": "left"
+  }
+}

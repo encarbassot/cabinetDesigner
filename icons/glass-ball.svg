@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <circle cx="8" cy="8" r="6.5" fill="url(#ball-body)" stroke="rgba(255,255,255,0.25)" stroke-width="0.5"/>
+  <ellipse cx="6" cy="5.5" rx="2.2" ry="1.2" fill="rgba(255,255,255,0.55)" transform="rotate(-20 6 5.5)"/>
+  <ellipse cx="5.2" cy="4.8" rx="0.7" ry="0.4" fill="rgba(255,255,255,0.85)" transform="rotate(-20 5.2 4.8)"/>
+  <defs>
+    <radialGradient id="ball-body" cx="38%" cy="35%" r="65%" fx="38%" fy="35%">
+      <stop offset="0%"   stop-color="#d0e8f8"/>
+      <stop offset="45%"  stop-color="#7ab8e0"/>
+      <stop offset="100%" stop-color="#2a6090"/>
+    </radialGradient>
+  </defs>
+</svg>

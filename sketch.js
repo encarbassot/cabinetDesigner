@@ -119,7 +119,11 @@ function addSlab(f, bay, relDist) {
 }
 
 function removeSlab(f, bay, i) {
-  if (bay >= 0 && bay < numBays(f)) f.columnSlabs[bay].splice(i, 1);
+  if (bay < 0 || bay >= numBays(f)) return;
+  const rels = f.columnSlabs[bay];
+  if (i < 0 || i >= rels.length) return;
+  if (i + 1 < rels.length) rels[i + 1] += rels[i];
+  rels.splice(i, 1);
 }
 
 function updateColumnWidth(f, bay, w) {
